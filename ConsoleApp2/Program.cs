@@ -6,25 +6,37 @@ using System.Collections.Generic;
 
 class program
 {
-    public static Columns columns;
+    
     static void Main(string[] args)
     {
         try
         {
-
-
-            string path = $@"C:\Users\dorbs\OneDrive\שולחן העבודה\‏‏test1 - עותק.xlsx";
+            string path = $@"C:\Users\dorbs\OneDrive\שולחן העבודה\t.xlsx";
             Application excel = new Application();
             Workbook workbook = excel.Workbooks.Open(path);
             Worksheet worksheet = workbook.ActiveSheet;
 
-            // Add new column for distance
-            int columnCount = worksheet.UsedRange.Columns.Count;
-            int newColumnIndex = columnCount + 1;
-            var newColumnRange = worksheet.Cells[1, newColumnIndex];
-            newColumnRange.Value = "Distance";
+            int distanceColumnIndex = -1;
+            for (int i = 1; i <= worksheet.UsedRange.Columns.Count; i++)
+            {
+                var header = worksheet.Cells[1, i].Value?.ToString();
+                if (header == "Distance")
+                {
+                    distanceColumnIndex = i;
+                    break;
+                }
+            }
 
-           
+            if (distanceColumnIndex == -1)
+            {
+                // Add new column for distance
+                int columnCount = worksheet.UsedRange.Columns.Count;
+                int newColumnIndex = columnCount + 1;
+                var newColumnRange = worksheet.Cells[1, newColumnIndex];
+                newColumnRange.Value = "Distance";
+                distanceColumnIndex = newColumnIndex;
+            }
+
             for (int i = 2; i <= worksheet.UsedRange.Rows.Count; i++)
             {
                 string origin = worksheet.Cells[i, 1].Value?.ToString();
@@ -40,10 +52,18 @@ class program
                 }
                 else
                 {
-                    distance = getDistance(origin, destination);
+                    var distanceCell = worksheet.Cells[i, distanceColumnIndex];
+                    if (distanceCell.Value == null)
+                    {
+                        distance = getDistance(origin, destination);
+                        distanceCell.Value = distance;
+                    }
+                    else
+                    {
+                        distance = (int)distanceCell.Value;
+                    }
                 }
-
-                worksheet.Cells[i, newColumnIndex].Value = distance;
+               
             }
 
             workbook.Save();
@@ -51,9 +71,9 @@ class program
             excel.Quit();
             Console.WriteLine("Success");
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
-            string path = $@"C:\Users\dorbs\OneDrive\שולחן העבודה\‏‏test1 - עותק.xlsx";
+            string path = $@"C:\Users\dorbs\OneDrive\שולחן העבודה\t.xlsx";
             Application excel = new Application();
             Workbook workbook = excel.Workbooks.Open(path);
             Worksheet worksheet = workbook.ActiveSheet;
@@ -67,7 +87,7 @@ class program
     {
         //System.Threading.Thread.Sleep(1000);
         int distance = 0;
-        string url = $"https://maps.googleapis.com/maps/api/directions/json?origin={origin}&destination={destination}&key=AIzaSyDdAd2YVG51DEku5h24PoGXIWh92SNscvQ";
+        string url = $"https://maps.googleapis.com/maps/api/directions/json?origin={origin}&destination={destination}&key=Your_API_Key";
         string content = fileGetContents(url);
         JObject o = JObject.Parse(content);
         try
